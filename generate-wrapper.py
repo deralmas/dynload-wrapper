@@ -43,59 +43,74 @@ NOW=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 PROGNAME=sys.argv[0]
 FLAGS=""
 
-def stringify_declaration(ext, t):
-    # Simple stuff. Everything has to reduce to these.
+def stringify_declaration(ext, t, ptrs=""):
+    result = ""
+
+    # NOTE: Pointers get accumulated throughout calls. This is to allow for
+    # special cases (like pointers to pointers and pointers to functions) to be
+    # handled correctly. In normal cases they're just appended at the end.
+    old_ptrs = ptrs
+    if not isinstance(t, FuncDecl) and not isinstance(t, PtrDecl):
+        ptrs = ""
+
     match t:
+        # Simple stuff. Everything has to reduce to these.
         case EllipsisParam():
-            return "..."
+            result = "..."
 
         case Enum():
-            return f"enum {t.name}"
+            result = f"enum {t.name}"
 
         case Struct():
-            return(f"struct {t.name}")
+            result = f"struct {t.name}"
 
         case Union():
-            return(f"union {t.name}")
+            result = f"union {t.name}"
 
         case IdentifierType():
-            return(' '.join(t.names))
+            result = ' '.join(t.names)
 
-    # Complex compound stuff.
-    match t:
+        # Complex compound stuff.
         case ArrayDecl():
             if t.dim:
-                return(f"{stringify_declaration(ext, t.type)} [{stringify_declaration(ext, t.dim)}]")
+                result = f"{stringify_declaration(ext, t.type, ptrs)} [{stringify_declaration(ext, t.dim, ptrs)}]"
             else:
-                return(f"{stringify_declaration(ext, t.type)} []")
+                result = f"{stringify_declaration(ext, t.type, ptrs)} []"
 
         case Decl():
-            return stringify_declaration(ext, t.type)
+            result = f"{stringify_declaration(ext, t.type, ptrs)}"
 
         case FuncDecl():
-            return f"{stringify_declaration(ext, t.type)} (*{stringify_declaration(ext, t.type)})({stringify_declaration(ext, t.args)})"
+            result = f"{stringify_declaration(ext, t.type)}({ptrs})({stringify_declaration(ext, t.args)})"
 
         case ParamList():
             params = []
 
             for param in t.params:
-                params.append(stringify_declaration(ext, param))
+                params.append(stringify_declaration(ext, param, ptrs))
 
-            return ', '.join(params)
+            result = ', '.join(params)
 
         case PtrDecl():
-            return stringify_declaration(ext, t.type) + "*"
+            result = stringify_declaration(ext, t.type, ptrs + "*")
 
         case TypeDecl():
             if len(t.quals) > 0:
-                return f"{' '.join(t.quals)} {stringify_declaration(ext, t.type)}"
+                result = f"{' '.join(t.quals)} {stringify_declaration(ext, t.type, ptrs)}"
             else:
-                return stringify_declaration(ext, t.type)
+                result = stringify_declaration(ext, t.type, ptrs)
 
         case Typename():
             # Not sure what this is but it pops up. Treating it as an empty node
             # seems to work fine.
-            return stringify_declaration(ext, t.type)
+            result = stringify_declaration(ext, t.type, ptrs)
+
+    # Those other two get their own treatment
+    if not isinstance(t, FuncDecl) and not isinstance(t, PtrDecl):
+        result += old_ptrs
+
+    if len(result) > 0:
+        return result
 
     # Fallback error.
     print(t)
