@@ -31,7 +31,7 @@ from subprocess import check_output
 
 try:
     from pycparser import c_parser, c_ast, parse_file, c_generator
-    from pycparser.c_ast import Decl, FuncDecl, IdentifierType, TypeDecl, Struct, Union, PtrDecl, EllipsisParam, ArrayDecl, Typedef, Enum
+    from pycparser.c_ast import ArrayDecl, Decl, EllipsisParam, Enum, FuncDecl, IdentifierType, ParamList, PtrDecl, Struct, TypeDecl, Typedef, Typename, Union
 except:
     print("pycparser not found.")
     print("Try installing it with pip install pycparser or using your distributions package manager.")
@@ -44,48 +44,64 @@ PROGNAME=sys.argv[0]
 FLAGS=""
 
 def stringify_declaration(ext, t):
-    pointer=""
+    # Simple stuff. Everything has to reduce to these.
+    match t:
+        case EllipsisParam():
+            return "..."
 
-    while isinstance(t, PtrDecl):
-        pointer+="*"
-        t = t.type
-    if isinstance(t, Decl):
-        return stringify_declaration(ext, t.type)
-    if isinstance(t, EllipsisParam):
-        return "..."
+        case Enum():
+            return f"enum {t.name}"
 
-    if isinstance(t.type, IdentifierType):
-        return(f"{' '.join(t.quals)} {' '.join(t.type.names)}{pointer}")
-    elif isinstance(t, ArrayDecl):
-        if t.dim:
-            return(f"{stringify_declaration(ext, t.type)} [{t.dim.value}]")
-        else:
-            return(f"{stringify_declaration(ext, t.type)} []")
-    elif isinstance(t.type, TypeDecl):
-        return(f"{' '.join(t.type.quals)} {' '.join(t.type.type.names)}{pointer}")
-    elif isinstance(t.type, FuncDecl):
-        params = []
-        for param in t.type.args.params:
-            params.append(stringify_declaration(ext, param, names))
-        return(f"{' '.join(t.type.type.type.names)} (*{(t.type.type.declname)})({', '.join(params)})")
-    elif isinstance(t.type, Enum):
-        return(f"enum {t.type.name}")
-    elif isinstance(t.type, Struct):
-        return(f"struct {t.type.name}{pointer}")
-    elif isinstance(t.type, Union):
-        return(f"union {t.type.name}")
-    elif isinstance(t.type, PtrDecl):
-        return(f"{stringify_declaration(ext, t.type.type)}*")
-    elif isinstance(t.type, ArrayDecl):
-        if t.type.dim:
-            return(f"{stringify_declaration(ext, t.type.type)} [{t.type.dim.value}]")
-        else:
-            return(f"{stringify_declaration(ext, t.type.type)} []")
-    else:
-        print(t)
-        print(type(t.type))
-        print(f"Unknown t type? {ext.name}")
-        sys.exit(1)
+        case Struct():
+            return(f"struct {t.name}")
+
+        case Union():
+            return(f"union {t.name}")
+
+        case IdentifierType():
+            return(' '.join(t.names))
+
+    # Complex compound stuff.
+    match t:
+        case ArrayDecl():
+            if t.dim:
+                return(f"{stringify_declaration(ext, t.type)} [{stringify_declaration(ext, t.dim)}]")
+            else:
+                return(f"{stringify_declaration(ext, t.type)} []")
+
+        case Decl():
+            return stringify_declaration(ext, t.type)
+
+        case FuncDecl():
+            return f"{stringify_declaration(ext, t.type)} (*{stringify_declaration(ext, t.type)})({stringify_declaration(ext, t.args)})"
+
+        case ParamList():
+            params = []
+
+            for param in t.params:
+                params.append(stringify_declaration(ext, param))
+
+            return ', '.join(params)
+
+        case PtrDecl():
+            return stringify_declaration(ext, t.type) + "*"
+
+        case TypeDecl():
+            if len(t.quals) > 0:
+                return f"{' '.join(t.quals)} {stringify_declaration(ext, t.type)}"
+            else:
+                return stringify_declaration(ext, t.type)
+
+        case Typename():
+            # Not sure what this is but it pops up. Treating it as an empty node
+            # seems to work fine.
+            return stringify_declaration(ext, t.type)
+
+    # Fallback error.
+    print(t)
+    print(type(t.type))
+    print(f"Unknown t type? {ext.name}")
+    sys.exit(1)
 
 def parse_header(filename, omit_prefix, initname, ignore_headers = [], ignore_all = False, include_headers = []):
     mydir = os.path.dirname(os.path.abspath(__file__))
@@ -129,7 +145,7 @@ def parse_header(filename, omit_prefix, initname, ignore_headers = [], ignore_al
             for param in ext.type.args.params:
                 params_anon.append(stringify_declaration(ext, param))
 
-            sym_definitions.append(f"{stringify_declaration(ext, ext.type.type)} (*{ext.name}_dylibloader_wrapper_{initname})({','.join(params_anon)});".strip())
+            sym_definitions.append(f"{stringify_declaration(ext, ext.type.type)} (*{ext.name}_dylibloader_wrapper_{initname})({', '.join(params_anon)});".strip())
             functions.append(ext.name)
 
     return (functions, sym_definitions)
