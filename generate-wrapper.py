@@ -29,12 +29,22 @@ import textwrap
 from datetime import datetime
 
 try:
+    import pycparser
     from pycparser import c_parser, c_ast, parse_file, c_generator
     from pycparser.c_ast import Decl, FuncDecl, PtrDecl
 except:
     print("pycparser not found.")
     print("Try installing it with pip install pycparser or using your distributions package manager.")
     sys.exit(1)
+
+try:
+    import pycparserext
+    from pycparserext import ext_c_parser, ext_c_generator
+    from pycparserext.ext_c_parser import FuncDeclExt
+    HAS_EXT = True
+except:
+    HAS_EXT = False
+    print("pycparserext not found. Falling back to vanilla pycparser. Compatibility is limited.")
 
 VERSION="0.7"
 URL="https://github.com/hpvb/dynload-wrapper"
@@ -43,7 +53,7 @@ PROGNAME=os.path.basename(sys.argv[0])
 FLAGS=""
 
 def stringify_declaration(t):
-    generator = c_generator.CGenerator()
+    generator = ext_c_generator.GnuCGenerator() if HAS_EXT else c_generator.CGenerator()
     return generator.visit(t)
 
 def get_name(t):
@@ -70,14 +80,16 @@ def parse_header(filename, omit_prefix, initname, ignore_headers = [], ignore_al
             cpp_args.append(include_dir)
 
     print(f"cpp_args: {cpp_args}")
-    ast = parse_file(filename, use_cpp=True, cpp_path='gcc', cpp_args=cpp_args)
+    text = pycparser.preprocess_file(filename, cpp_path='gcc', cpp_args=cpp_args)
+    parser = ext_c_parser.GnuCParser() if HAS_EXT else c_parser.CParser()
+    ast = parser.parse(text)
 
     functions = []
     sym_definitions = []
 
     for ext in ast.ext:
         if isinstance(ext, Decl):
-            if not isinstance(ext.type, FuncDecl):
+            if not isinstance(ext.type, FuncDeclExt if HAS_EXT else FuncDecl):
                 continue
 
             skip = False
