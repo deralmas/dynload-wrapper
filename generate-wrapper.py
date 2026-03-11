@@ -143,9 +143,9 @@ def generate_header(sysincludes, functions, initname, implementation_headers):
 
     for include in sysincludes:
         if include.startswith("<"):
-            retval.append(f"#include {include}")
+            retval.append(f"#include {include} // IWYU pragma: export.")
         else:
-            retval.append(f"#include \"{include}\"")
+            retval.append(f"#include \"{include}\" // IWYU pragma: export.")
 
     for function in functions:
         retval.append(f"#undef {function}")
