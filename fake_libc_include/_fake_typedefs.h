@@ -126,6 +126,9 @@ typedef int stack_t;
 typedef int siginfo_t;
 typedef int z_stream;
 
+/* POSIX locale */
+typedef struct locale_t locale_t;
+
 /* C99 exact-width integer types */
 typedef int int8_t;
 typedef int uint8_t;
