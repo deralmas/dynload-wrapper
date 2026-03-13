@@ -14,6 +14,7 @@
 #define ushort uint16_t
 #define uint uint32_t
 
+
 typedef int size_t;
 typedef int __builtin_va_list;
 typedef int __gnuc_va_list;
@@ -55,9 +56,17 @@ typedef int __ULong;
 typedef int __FILE;
 typedef int ptrdiff_t;
 typedef int wchar_t;
+typedef int char16_t;
+typedef int char32_t;
 typedef int __off_t;
 typedef int __pid_t;
 typedef int __loff_t;
+typedef int u_char;
+typedef int u_short;
+typedef int u_int;
+typedef int u_long;
+typedef int ushort;
+typedef int uint;
 typedef int clock_t;
 typedef int time_t;
 typedef int daddr_t;
@@ -158,6 +167,12 @@ typedef int uintmax_t;
 /* C99 stdbool.h bool type. _Bool is built-in in C99 */
 typedef _Bool bool;
 
+/* GNU Extension for 64-bit targets */
+#ifdef __SIZEOF_INT128__
+typedef int __int128_t;
+typedef int __uint128_t;
+#endif /* __SIZEOF_INT128__ */
+
 /* Mir typedefs */
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
@@ -175,5 +190,61 @@ typedef struct MirDisplayConfig MirDisplayConfig;
 typedef struct xcb_connection_t xcb_connection_t;
 typedef uint32_t xcb_window_t;
 typedef uint32_t xcb_visualid_t;
+
+/* dirent typedef */
+typedef void* DIR;
+
+/* socket typedefs */
+typedef	__uint32_t  __socklen_t;
+typedef __socklen_t socklen_t;
+typedef unsigned short __kernel_sa_family_t;
+
+/* C11 stdatomic.h types */
+typedef _Atomic(_Bool)              atomic_bool;
+typedef _Atomic(char)               atomic_char;
+typedef _Atomic(signed char)        atomic_schar;
+typedef _Atomic(unsigned char)      atomic_uchar;
+typedef _Atomic(short)              atomic_short;
+typedef _Atomic(unsigned short)     atomic_ushort;
+typedef _Atomic(int)                atomic_int;
+typedef _Atomic(unsigned int)       atomic_uint;
+typedef _Atomic(long)               atomic_long;
+typedef _Atomic(unsigned long)      atomic_ulong;
+typedef _Atomic(long long)          atomic_llong;
+typedef _Atomic(unsigned long long) atomic_ullong;
+typedef _Atomic(uint_least16_t)     atomic_char16_t;
+typedef _Atomic(uint_least32_t)     atomic_char32_t;
+typedef _Atomic(wchar_t)            atomic_wchar_t;
+typedef _Atomic(int_least8_t)       atomic_int_least8_t;
+typedef _Atomic(uint_least8_t)      atomic_uint_least8_t;
+typedef _Atomic(int_least16_t)      atomic_int_least16_t;
+typedef _Atomic(uint_least16_t)     atomic_uint_least16_t;
+typedef _Atomic(int_least32_t)      atomic_int_least32_t;
+typedef _Atomic(uint_least32_t)     atomic_uint_least32_t;
+typedef _Atomic(int_least64_t)      atomic_int_least64_t;
+typedef _Atomic(uint_least64_t)     atomic_uint_least64_t;
+typedef _Atomic(int_fast8_t)        atomic_int_fast8_t;
+typedef _Atomic(uint_fast8_t)       atomic_uint_fast8_t;
+typedef _Atomic(int_fast16_t)       atomic_int_fast16_t;
+typedef _Atomic(uint_fast16_t)      atomic_uint_fast16_t;
+typedef _Atomic(int_fast32_t)       atomic_int_fast32_t;
+typedef _Atomic(uint_fast32_t)      atomic_uint_fast32_t;
+typedef _Atomic(int_fast64_t)       atomic_int_fast64_t;
+typedef _Atomic(uint_fast64_t)      atomic_uint_fast64_t;
+typedef _Atomic(intptr_t)           atomic_intptr_t;
+typedef _Atomic(uintptr_t)          atomic_uintptr_t;
+typedef _Atomic(size_t)             atomic_size_t;
+typedef _Atomic(ptrdiff_t)          atomic_ptrdiff_t;
+typedef _Atomic(intmax_t)           atomic_intmax_t;
+typedef _Atomic(uintmax_t)          atomic_uintmax_t;
+typedef struct atomic_flag { atomic_bool _Value; } atomic_flag;
+typedef enum memory_order {
+  memory_order_relaxed,
+  memory_order_consume,
+  memory_order_acquire,
+  memory_order_release,
+  memory_order_acq_rel,
+  memory_order_seq_cst
+} memory_order;
 
 #endif

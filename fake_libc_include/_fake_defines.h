@@ -26,11 +26,21 @@
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
 
+#define SCHAR_MIN -128
+#define SCHAR_MAX 127
+#define CHAR_MIN -128
+#define CHAR_MAX 127
 #define UCHAR_MAX 255
+#define SHRT_MIN -32768
+#define SHRT_MAX 32767
 #define USHRT_MAX 65535
+#define INT_MIN -2147483648
+#define INT_MAX 2147483647
 #define UINT_MAX 4294967295U
+#define LONG_MIN -9223372036854775808L
+#define LONG_MAX 9223372036854775807L
+#define ULONG_MAX 18446744073709551615UL
 #define RAND_MAX 32767
-#define INT_MAX 32767
 
 /* C99 inttypes.h defines */
 #define PRId8 "d"
@@ -198,8 +208,6 @@
 #define va_arg(_ap, _type) __builtin_va_arg((_ap))
 #define va_end(_list)
 
-#endif
-
 /* Vectors */
 #define __m128    int
 #define __m128_u  int
@@ -219,3 +227,36 @@
 #define __m512d_u int
 #define __m512i   int
 #define __m512i_u int
+
+/* C11 stdnoreturn.h defines */
+#define __noreturn_is_defined 1
+#define noreturn _Noreturn
+
+/* C11 threads.h defines */
+#define thread_local _Thread_local
+
+/* C11 assert.h defines */
+#define static_assert _Static_assert
+
+/* C11 stdatomic.h defines */
+#define ATOMIC_BOOL_LOCK_FREE       0
+#define ATOMIC_CHAR_LOCK_FREE       0
+#define ATOMIC_CHAR16_T_LOCK_FREE   0
+#define ATOMIC_CHAR32_T_LOCK_FREE   0
+#define ATOMIC_WCHAR_T_LOCK_FREE    0
+#define ATOMIC_SHORT_LOCK_FREE      0
+#define ATOMIC_INT_LOCK_FREE        0
+#define ATOMIC_LONG_LOCK_FREE       0
+#define ATOMIC_LLONG_LOCK_FREE      0
+#define ATOMIC_POINTER_LOCK_FREE    0
+#define ATOMIC_VAR_INIT(value) (value)
+#define ATOMIC_FLAG_INIT { 0 }
+#define kill_dependency(y) (y)
+
+/* C11 stdalign.h defines */
+#define alignas _Alignas
+#define alignof _Alignof
+#define __alignas_is_defined 1
+#define __alignof_is_defined 1
+
+#endif
